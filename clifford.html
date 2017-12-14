@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Clifford attractors</title>
+
+<script src="clifford_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="clifford_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="clifford_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="clifford_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="clifford_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="clifford_files/navigation-1.1/tabsets.js"></script>
+<link href="clifford_files/highlightjs-1.1/default.css" rel="stylesheet" />
+<script src="clifford_files/highlightjs-1.1/highlight.js"></script>
+<link href="clifford_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="clifford_files/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Clifford attractors</h1>
+
+</div>
+
+
+<p>I have a strange affinity for attractors, and has had it since graduating highschool, where I got a top grade in the final mathematics examination. That was under the old grading system. And the grade (13) was given to only two students in my high school that year. The examination centered on strange attractors. I’ve have not spend much time on it lateer. But there is a weird beauty in them.</p>
+<p>Recently I discovered Clifford Attractors. Take a look at this page for some very nice examples. They look stunning, and are simple to handle. Lets play with them!</p>
+<p>Clifford Attractors are defined by iteratively making these calculations: xn+1 &lt;- sin(a<em>yn) + c</em>cos(a<em>xn) yn+1 &lt;- sin(bxn) + d</em>cos(b*yn)</p>
+<p>Choose a, b, c and d between -2 and 2. Calculate x,y for n=0 to n=10.000.000 and plot them. It looks cool!</p>
+<p>Lets begin by defining a function that takes four variables and a number of points, and calculate the points:</p>
+<pre class="r"><code>calcTrace &lt;- function(a,b,c,d,numint){
+  x &lt;- y &lt;- rep(NULL, numint) # initializing the vectors
+  x[1] &lt;- 0 # set the first point to (0,0)
+  y[1] &lt;- 0
+  for (i in 2:numint){    # calculate the following points
+    x[i] &lt;- sin(a*y[(i-1)]) + c*cos(a*x[(i-1)])
+    y[i] &lt;- sin(b*x[(i-1)]) + d*cos(b*y[(i-1)])  
+  }
+  df &lt;- data.frame(x=x,y=y)
+  return(df)
+}</code></pre>
+<p>Lets also define some parameters. I would prefer to choose the parameters at random. But there are a surprising number of instances where this lead to nothing. The formulas converges very quickly on just a few values, and I end up with a simple dot on the plot. I guess that is to be expected - but not what I am looking for. I want beautiful images!</p>
+<pre class="r"><code>a &lt;- -1.8 
+b &lt;- -1.9 
+c &lt;- -1.7
+d &lt;-  1.9
+
+points &lt;- calcTrace(a,b,c,d,10000000)</code></pre>
+<p>That takes some time - I’ll get back to that. Lets plot it. I remove almost anything from the ggplot theme, and insert the parameters in the plot.</p>
+<pre class="r"><code>library(ggplot2)
+opt = theme(legend.position  = &quot;none&quot;,
+            panel.background = element_rect(fill=&quot;white&quot;),
+            axis.ticks       = element_blank(),
+            panel.grid       = element_blank(),
+            axis.title       = element_blank(),
+            axis.text        = element_blank(),
+            plot.title       = element_text(size=9, face=&quot;italic&quot;, hjust = 0.5)
+            )
+
+p &lt;- ggplot(points, aes(x, y)) + geom_point(color=&quot;black&quot;, shape=46, alpha=.01) + 
+  opt +
+  ggtitle(paste(&quot;a = &quot;,a , &quot;, b = &quot;, b, &quot;\n c = &quot;, c, &quot; d = &quot;,  d))
+print(p)</code></pre>
+<p><img src="clifford_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>All right. It takes some time to do the calculations. There are ways to speed that up.</p>
+<p>One way is to compile the function.</p>
+<pre class="r"><code>library(compiler)
+compiled &lt;- cmpfun(calcTrace)</code></pre>
+<p>According to the compiler packages, that should make the function faster. Lets test it:</p>
+<pre class="r"><code>library(microbenchmark) 
+test &lt;- microbenchmark(
+    calcTrace(a,b,c,d,10000000),
+    compiled(a,b,c,d,10000000) , times=3
+)
+print(test)</code></pre>
+<p>I am not impressed. This result might be caused by the fact that I am running Paperclips <a href="http://www.decisionproblem.com/paperclips" class="uri">http://www.decisionproblem.com/paperclips</a> in the background (almost ready to release the hypnodrones!) on a not particularly powerfull laptop.</p>
+<p>What else could be done? I’m tinkering with this to hone my R-skills. But here might be a situation where it would be better to do it in another language.</p>
+<p>The library Rcpp allows me to add C++ code. Lets try that:</p>
+<pre class="r"><code>library(Rcpp)
+cppFunction(&#39;DataFrame cppTrace(double a, double b, double c, double d, int numint) {
+            // create the columns
+            NumericVector x(numint);
+            NumericVector y(numint);
+            x[0]=0;
+            y[0]=0;
+            for(int i = 1; i &lt; numint; ++i) {
+            x[i] = sin(a*y[i-1])+c*cos(a*x[i-1]);
+            y[i] = sin(b*x[i-1])+d*cos(b*y[i-1]);
+            }
+            // return a new data frame
+            return DataFrame::create(_[&quot;x&quot;]= x, _[&quot;y&quot;]= y);
+            }
+            &#39;)</code></pre>
+<p>Lets see how quick that version is:</p>
+<pre class="r"><code>library(microbenchmark)</code></pre>
+<pre><code>## Loading required package: microbenchmarkCore</code></pre>
+<pre class="r"><code>test2 &lt;- microbenchmark(
+    cppTrace(a,b,c,d,10000000),
+    times=3
+)
+print(test2)</code></pre>
+<pre><code>## Unit: seconds
+##                         expr     min       lq     mean   median       uq
+##  cppTrace(a, b, c, d, 1e+07) 2.11005 2.122835 2.154553 2.135619 2.176804
+##       max neval
+##  2.217989     3</code></pre>
+<p>That was fast!</p>
+<p>The plot still takes an awfull lot of time. I have not found a way to do anything about that.</p>
+<p>Lets make a new plot, with different parameters.</p>
+<pre class="r"><code>a &lt;-  1.7
+b &lt;-  1.7
+c &lt;-  0.7
+d &lt;-  1.3
+points &lt;- cppTrace(a,b,c,d,10000000)
+q &lt;- ggplot(points, aes(x, y)) + geom_point(color=&quot;orange&quot;, shape=46, alpha=.01) + 
+  opt +
+  ggtitle(paste(&quot;a = &quot;,a , &quot;, b = &quot;, b, &quot;\n c = &quot;, c, &quot; d = &quot;,  d))
+print(q)</code></pre>
+<p><img src="clifford_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>Nice. Lets make one in green as well:</p>
+<pre class="r"><code>a &lt;-  -1.6
+b &lt;-  1.2
+c &lt;-  0.1
+d &lt;-  -1.2
+points &lt;- cppTrace(a,b,c,d,10000000)
+r &lt;- ggplot(points, aes(x, y)) + geom_point(color=&quot;green&quot;, shape=46, alpha=.01) + 
+  opt +
+  ggtitle(paste(&quot;a = &quot;,a , &quot;, b = &quot;, b, &quot;\n c = &quot;, c, &quot; d = &quot;,  d))
+print(r)</code></pre>
+<p><img src="clifford_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
